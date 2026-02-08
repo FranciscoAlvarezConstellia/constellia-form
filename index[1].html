@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONSTELLia · Análisis Orbital Personalizado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0A0E27 0%, #1a1f3a 100%);
+            color: #E8EAF6;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            background: rgba(15, 20, 40, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #B0B8D4;
+            font-weight: 300;
+            font-style: italic;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: #8892B0;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667EEA 0%, #764BA2 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-header {
+            margin-bottom: 30px;
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #E8EAF6;
+        }
+
+        .step-description {
+            font-size: 1rem;
+            color: #B0B8D4;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #E8EAF6;
+        }
+
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option,
+        .checkbox-option {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .radio-option:hover,
+        .checkbox-option:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateX(5px);
+        }
+
+        .radio-option.selected,
+        .checkbox-option.selected {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #667EEA;
+        }
+
+        .radio-option input[type="radio"],
+        .checkbox-option input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667EEA;
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .option-text {
+            font-weight: 500;
+            color: #E8EAF6;
+            margin-bottom: 4px;
+        }
+
+        .option-description {
+            font-size: 0.9rem;
+            color: #8892B0;
+            font-style: italic;
+        }
+
+        .text-input,
+        .textarea-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            color: #E8EAF6;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .text-input:focus,
+        .textarea-input:focus {
+            outline: none;
+            border-color: #667EEA;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .textarea-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #8892B0;
+            margin-top: 6px;
+        }
+
+        .note {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #F59E0B;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #FCD34D;
+            margin-top: 15px;
+        }
+
+        .resources {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .resources-title {
+            font-weight: 600;
+            color: #FCA5A5;
+            margin-bottom: 12px;
+        }
+
+        .resource-item {
+            margin: 8px 0;
+            color: #E8EAF6;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #E8EAF6;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .guide-box {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .guide-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #667EEA;
+        }
+
+        .guide-item {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+            align-items: flex-start;
+        }
+
+        .guide-emoji {
+            font-size: 1.3rem;
+        }
+
+        .guide-text {
+            flex: 1;
+        }
+
+        .guide-text strong {
+            color: #E8EAF6;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .guide-text span {
+            color: #8892B0;
+            font-size: 0.9rem;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #10B981;
+        }
+
+        .success-text {
+            color: #B0B8D4;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            color: #FCA5A5;
+            margin-top: 20px;
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .step-title {
+                font-size: 1.5rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">CONSTELLia</div>
+            <div class="subtitle">Análisis Orbital Personalizado</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <form id="constelliaForm">
+
+            <!-- PASO 0: Bienvenida -->
+            <div class="step active" data-step="0">
+                <div class="step-header">
+                    <div class="step-icon">🌌</div>
+                    <h2 class="step-title">Bienvenida orbital</h2>
+                    <p class="tagline"><strong>Vas a descubrir patrones invisibles que gobiernan tu vida.</strong></p>
+                    <p class="tagline">Este cuestionario te guiará a través de tu sistema familiar, tus dinámicas relacionales y las órbitas emocionales que se repiten sin que lo notes.</p>
+                    <p class="tagline"><strong>No es un test.</strong> Es un <strong>mapa de tu inconsciente sistémico</strong>.</p>
+                </div>
+
+                <div class="guide-box">
+                    <div class="guide-title">🧭 Cómo completar tu análisis orbital</div>
+
+                    <div class="guide-item">
+                        <div class="guide-emoji">🎯</div>
+                        <div class="guide-text">
+                            <strong>Selecciona sin juzgar</strong>
+                            <span>Marca las opciones que resuenen, aunque no entiendas por qué.</span>
+                        </div>
+                    </div>
+
+                    <div class="guide-item">
+                        <div class="guide-emoji">⏱️</div>
+                        <div class="guide-text">
+                            <strong>Tu ritmo, tu espacio</strong>
+                            <span>Promedio: 12–15 minutos. Puedes pausar cuando necesites.</span>
+                        </div>
+                    </div>
+
+                    <div class="guide-item">
+                        <div class="guide-emoji">🔒</div>
+                        <div class="guide-text">
+                            <strong>Confidencial y seguro</strong>
+                            <span>Tus respuestas están protegidas. Nunca compartimos tu información.</span>
+                        </div>
+                    </div>
+
+                    <div class="guide-item">
+                        <div class="guide-emoji">📹</div>
+                        <div class="guide-text">
+                            <strong>Tu video personalizado</strong>
+                            <span>Recibirás tu Análisis Orbital en video en 24–48h hábiles.</span>
+                        </div>
+                    </div>
+
+                    <div class="guide-item">
+                        <div class="guide-emoji">✨</div>
+                        <div class="guide-text">
+                            <strong>Respuestas honestas = insights precisos</strong>
+                            <span>No hay respuestas correctas. Solo patrones por descubrir.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email para recibir tu análisis *</label>
+                    <input type="email" name="email" class="text-input" placeholder="tu@email.com" required>
+                </div>
+            </div>
+
+            <!-- PASO 1: Órbita emocional dominante -->
+            <div class="step" data-step="1">
+                <div class="step-header">
+                    <div class="step-icon">🌀</div>
+                    <h2 class="step-title">Tu órbita emocional dominante</h2>
+                    <p class="step-description">¿Qué patrón reconoces más en tu vida?</p>
+                    <p class="step-description">Las órbitas emocionales son patrones repetitivos que estructuran cómo te relacionas, decides y sientes. Lee con calma. Suele haber una que te "pesa" más.</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Repito relaciones o situaciones similares" required>
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🔄</span> Repito relaciones o situaciones similares</div>
+                                <div class="option-description">Parejas parecidas, trabajos con las mismas dinámicas, conflictos que vuelven</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Siento bloqueos para avanzar">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🚧</span> Siento bloqueos para avanzar en áreas importantes</div>
+                                <div class="option-description">Saboteo mis logros, no termino proyectos, me freno antes del éxito</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Cargo con responsabilidades que no me corresponden">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">⚖️</span> Cargo con responsabilidades que no me corresponden</div>
+                                <div class="option-description">Cuido a otros antes que a mí, resuelvo problemas ajenos, me sacrifico</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Experimento emociones intensas difíciles de regular">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🌊</span> Experimento emociones intensas difíciles de regular</div>
+                                <div class="option-description">Ansiedad, tristeza o ira que me desbordan sin razón clara</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Me siento desconectado de quién soy realmente">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🧩</span> Me siento desconectado/a de quién soy realmente</div>
+                                <div class="option-description">Vivo en automático, no sé qué quiero, siento que uso una máscara</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="patron_dominante" value="Relaciones conflictivas con mi familia de origen">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">💔</span> Relaciones conflictivas o distantes con mi familia de origen</div>
+                                <div class="option-description">Tensión, silencios, rencores o desconexión con padres/hermanos</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 2: Intensidad -->
+            <div class="step" data-step="2">
+                <div class="step-header">
+                    <div class="step-icon">📊</div>
+                    <h2 class="step-title">La intensidad de tu órbita</h2>
+                    <p class="step-description">¿Cómo afecta este patrón tu día a día?</p>
+                    <p class="step-description">No se trata de dramatizar ni minimizar. Solo reconocer el peso real que tiene ahora mismo.</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="intensidad" value="Leve" required>
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🟢</span> Leve</div>
+                                <div class="option-description">Lo noto de vez en cuando</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="intensidad" value="Moderada">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🟡</span> Moderada</div>
+                                <div class="option-description">Está presente, pero lo manejo</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="intensidad" value="Significativa">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🟠</span> Significativa</div>
+                                <div class="option-description">Afecta decisiones y relaciones importantes</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="intensidad" value="Intensa">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🔴</span> Intensa</div>
+                                <div class="option-description">Condiciona gran parte de mi vida</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 3: Sistema familiar -->
+            <div class="step" data-step="3">
+                <div class="step-header">
+                    <div class="step-icon">👥</div>
+                    <h2 class="step-title">Tu posición en el sistema familiar</h2>
+                    <p class="step-description">Tu lugar en el sistema determina tu rol invisible.</p>
+                    <p class="step-description">Ser el mayor, el menor, hijo único o intermedio no es azar. Es un <strong>patrón estructural</strong> que influye en cómo te relacionas, decides y sientes.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">¿Cuántos hermanos/as biológicos tienes?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="num_hermanos" value="0" required>
+                            <div class="option-content">
+                                <div class="option-text">0 (hijo/a único/a)</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="num_hermanos" value="1">
+                            <div class="option-content">
+                                <div class="option-text">1</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="num_hermanos" value="2">
+                            <div class="option-content">
+                                <div class="option-text">2</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="num_hermanos" value="3">
+                            <div class="option-content">
+                                <div class="option-text">3</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="num_hermanos" value="4 o más">
+                            <div class="option-content">
+                                <div class="option-text">4 o más</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">¿Cuál es tu posición entre ellos?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="posicion_hermanos" value="Hijo/a único/a" required>
+                            <div class="option-content">
+                                <div class="option-text">Soy hijo/a único/a</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="posicion_hermanos" value="Primogénito/a">
+                            <div class="option-content">
+                                <div class="option-text">Primogénito/a (el/la mayor)</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="posicion_hermanos" value="Intermedio/a">
+                            <div class="option-content">
+                                <div class="option-text">Intermedio/a</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="posicion_hermanos" value="Benjamín/a">
+                            <div class="option-content">
+                                <div class="option-text">Benjamín/a (el/la menor)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">¿Hay medios hermanos o hermanos adoptivos en tu familia?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="medios_hermanos" value="Sí" required>
+                            <div class="option-content">
+                                <div class="option-text">Sí</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="medios_hermanos" value="No">
+                            <div class="option-content">
+                                <div class="option-text">No</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="medios_hermanos" value="Prefiero no responder">
+                            <div class="option-content">
+                                <div class="option-text">Prefiero no responder</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 4: Eventos transgeneracionales -->
+            <div class="step" data-step="4">
+                <div class="step-header">
+                    <div class="step-icon">🧬</div>
+                    <h2 class="step-title">Las historias familiares se heredan sin palabras</h2>
+                    <p class="step-description">Los eventos que marcaron a generaciones anteriores dejan huellas emocionales que se transmiten a través de roles, silencios y expectativas implícitas.</p>
+                    <p class="step-description">Marca lo que sabes que ocurrió, aunque no lo hayas vivido directamente.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Selecciona todos los que apliquen:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Fallecimiento temprano padre/madre">
+                            <div class="option-content">
+                                <div class="option-text">🕊️ Fallecimiento temprano de un padre/madre</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Fallecimiento hermano/a">
+                            <div class="option-content">
+                                <div class="option-text">💔 Fallecimiento de hermano/a</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Adopción">
+                            <div class="option-content">
+                                <div class="option-text">🏡 Adopción en la familia</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Migración/exilio">
+                            <div class="option-content">
+                                <div class="option-text">🌍 Migración o exilio familiar significativo</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Divorcio padres">
+                            <div class="option-content">
+                                <div class="option-text">⚡ Divorcio o separación de los padres</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Crisis económica">
+                            <div class="option-content">
+                                <div class="option-text">💸 Crisis económica grave</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Secretos familiares">
+                            <div class="option-content">
+                                <div class="option-text">🤐 Secretos familiares importantes</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Enfermedades graves">
+                            <div class="option-content">
+                                <div class="option-text">🏥 Enfermedades graves recurrentes</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Violencia intrafamiliar">
+                            <div class="option-content">
+                                <div class="option-text">⚖️ Violencia intrafamiliar o abuso</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Ninguno">
+                            <div class="option-content">
+                                <div class="option-text">✅ Ninguno de los anteriores</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="eventos_familiares" value="Prefiero no responder">
+                            <div class="option-content">
+                                <div class="option-text">🔒 Prefiero no responder</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="note">
+                    Estos eventos ayudan a identificar patrones transgeneracionales y roles heredados.
+                </div>
+            </div>
+
+            <!-- PASO 5: Relación actual con familia -->
+            <div class="step" data-step="5">
+                <div class="step-header">
+                    <div class="step-icon">🌡️</div>
+                    <h2 class="step-title">Tu relación con el sistema ahora</h2>
+                    <p class="step-description">¿Cómo es tu vínculo con tu familia de origen hoy?</p>
+                    <p class="step-description">No importa si vives cerca o lejos. Importa cómo <strong>sientes</strong> esa relación cuando piensas en ellos.</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Muy cercana y armoniosa" required>
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">💚</span> Muy cercana y armoniosa</div>
+                                <div class="option-description">Hablamos seguido, hay confianza y apoyo</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Cercana con algunos conflictos">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">💛</span> Cercana con algunos conflictos</div>
+                                <div class="option-description">Hay cariño, pero también tensiones no resueltas</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Distante pero cordial">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🧡</span> Distante pero cordial</div>
+                                <div class="option-description">Poco contacto, pero sin grandes conflictos</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Distante y conflictiva">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">❤️‍🩹</span> Distante y conflictiva</div>
+                                <div class="option-description">Contacto mínimo, heridas sin sanar</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Sin contacto">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🖤</span> Sin contacto</div>
+                                <div class="option-description">No tenemos relación actualmente</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="relacion_familia" value="Prefiero no responder">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🔒</span> Prefiero no responder</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 6: Patrones de pareja -->
+            <div class="step" data-step="6">
+                <div class="step-header">
+                    <div class="step-icon">💞</div>
+                    <h2 class="step-title">Tus elecciones de pareja tienen un patrón</h2>
+                    <p class="step-description">Solemos reproducir roles y dinámicas relacionales aprendidos en la infancia.</p>
+                    <p class="step-description">Marca lo que reconozcas, sin juzgarte.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Selecciona todos los que apliquen:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Parejas similares">
+                            <div class="option-content">
+                                <div class="option-text">🔁 Elijo parejas con características similares</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Repito rol familiar">
+                            <div class="option-content">
+                                <div class="option-text">👤 Siento que repito el rol que tenía en mi familia</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Personas distantes">
+                            <div class="option-content">
+                                <div class="option-text">🎭 Atraigo personas emocionalmente distantes</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Relaciones tóxicas">
+                            <div class="option-content">
+                                <div class="option-text">⚠️ He estado en relaciones con control, celos o dependencia</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Enamoramiento rápido">
+                            <div class="option-content">
+                                <div class="option-text">🧲 Me enamoro rápido pero las relaciones se desgastan</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Miedo abandono">
+                            <div class="option-content">
+                                <div class="option-text">💔 Tengo miedo al abandono o a la intimidad</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Termino relaciones">
+                            <div class="option-content">
+                                <div class="option-text">🚪 Termino relaciones cuando se vuelven muy reales</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="No identifico patrones">
+                            <div class="option-content">
+                                <div class="option-text">✅ No identifico patrones claros</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="patrones_pareja" value="Prefiero no responder">
+                            <div class="option-content">
+                                <div class="option-text">🔒 Prefiero no responder</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 7: Red de apoyo -->
+            <div class="step" data-step="7">
+                <div class="step-header">
+                    <div class="step-icon">🤝</div>
+                    <h2 class="step-title">Tu red de apoyo y recursos actuales</h2>
+                    <p class="step-description">¿Con quién cuentas cuando todo se complica?</p>
+                    <p class="step-description">El apoyo social es un ancla. Reconocer si lo tienes o no es parte del mapa.</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="red_apoyo" value="Red sólida" required>
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🌟</span> Tengo una red de apoyo sólida</div>
+                                <div class="option-description">Varias personas en quien confío profundamente</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="red_apoyo" value="Algunas personas">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🌤️</span> Tengo algunas personas cercanas</div>
+                                <div class="option-description">1-2 personas con quienes puedo hablar de todo</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="red_apoyo" value="Red limitada">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">⛅</span> Mi red de apoyo es limitada</div>
+                                <div class="option-description">Tengo gente, pero no siempre puedo abrirme</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="red_apoyo" value="Me siento solo/a">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🌧️</span> Me siento bastante solo/a</div>
+                                <div class="option-description">No tengo a quién acudir cuando lo necesito</div>
+                            </div>
+                        </label>
+
+                        <label class="radio-option">
+                            <input type="radio" name="red_apoyo" value="Prefiero no responder">
+                            <div class="option-content">
+                                <div class="option-text"><span class="option-emoji">🔒</span> Prefiero no responder</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 8: Screening clínico -->
+            <div class="step" data-step="8">
+                <div class="step-header">
+                    <div class="step-icon">❗</div>
+                    <h2 class="step-title">Información importante</h2>
+                    <p class="step-description">Tu seguridad es lo primero.</p>
+                    <p class="step-description">Si experimentas alguna de estas situaciones <strong>ahora mismo</strong>, te recomendamos buscar apoyo profesional especializado antes de continuar.</p>
+                    <p class="step-description">Este análisis <strong>no sustituye atención clínica urgente</strong>.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Selecciona todos los que apliquen:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Pensamientos suicidas">
+                            <div class="option-content">
+                                <div class="option-text">Pensamientos recurrentes de hacerme daño o quitarme la vida</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Consumo sustancias">
+                            <div class="option-content">
+                                <div class="option-text">Consumo de sustancias que afecta mi vida cotidiana</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Violencia">
+                            <div class="option-content">
+                                <div class="option-text">Episodios recientes de violencia (sufrida o ejercida)</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Desconexión realidad">
+                            <div class="option-content">
+                                <div class="option-text">Experiencias de desconexión con la realidad</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Crisis pánico">
+                            <div class="option-content">
+                                <div class="option-text">Crisis de pánico o ansiedad que me impiden funcionar</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="screening" value="Ninguna">
+                            <div class="option-content">
+                                <div class="option-text">✅ Ninguna de las anteriores</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="resources">
+                    <div class="resources-title">🆘 Si necesitas ayuda ahora</div>
+                    <div class="resource-item"><strong>🇪🇸 España:</strong></div>
+                    <div class="resource-item">• <strong>112</strong> — Emergencias</div>
+                    <div class="resource-item">• <strong>024</strong> — Atención a la conducta suicida (gratuito, 24/7, confidencial)</div>
+                    <div class="resource-item">• <strong>016</strong> — Violencia contra las mujeres (también por WhatsApp: 600 000 016)</div>
+                </div>
+            </div>
+
+            <!-- PASO 9: Datos demográficos -->
+            <div class="step" data-step="9">
+                <div class="step-header">
+                    <div class="step-icon">📋</div>
+                    <h2 class="step-title">Sobre ti</h2>
+                    <p class="step-description">Para personalizar tu análisis orbital.</p>
+                    <p class="step-description">Estos datos nos ayudan a contextualizar tu mapa sistémico de forma más precisa. Toda la información es confidencial y voluntaria.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rango de edad</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="18-24 años" required>
+                            <div class="option-content"><div class="option-text">18-24 años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="25-34 años">
+                            <div class="option-content"><div class="option-text">25-34 años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="35-44 años">
+                            <div class="option-content"><div class="option-text">35-44 años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="45-54 años">
+                            <div class="option-content"><div class="option-text">45-54 años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="55-64 años">
+                            <div class="option-content"><div class="option-text">55-64 años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="65+ años">
+                            <div class="option-content"><div class="option-text">65+ años</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="edad" value="Prefiero no responder">
+                            <div class="option-content"><div class="option-text">Prefiero no responder</div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Identidad de género</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="genero" value="Mujer" required>
+                            <div class="option-content"><div class="option-text">Mujer</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="genero" value="Hombre">
+                            <div class="option-content"><div class="option-text">Hombre</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="genero" value="No binario">
+                            <div class="option-content"><div class="option-text">No binario</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="genero" value="Prefiero no responder">
+                            <div class="option-content"><div class="option-text">Prefiero no responder</div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">País/región de origen familiar</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="España" required>
+                            <div class="option-content"><div class="option-text">España</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="Latinoamérica">
+                            <div class="option-content"><div class="option-text">Latinoamérica</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="Europa (no España)">
+                            <div class="option-content"><div class="option-text">Europa (no España)</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="África/Medio Oriente">
+                            <div class="option-content"><div class="option-text">África del Norte / Medio Oriente</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="Otro">
+                            <div class="option-content"><div class="option-text">Otro</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="origen" value="Prefiero no responder">
+                            <div class="option-content"><div class="option-text">Prefiero no responder</div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Estado relacional actual</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="Soltero/a" required>
+                            <div class="option-content"><div class="option-text">Soltero/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="En pareja">
+                            <div class="option-content"><div class="option-text">En pareja (sin convivencia)</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="Conviviendo/casado">
+                            <div class="option-content"><div class="option-text">Conviviendo / casado/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="Separado/divorciado">
+                            <div class="option-content"><div class="option-text">Separado/a o divorciado/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="Viudo/a">
+                            <div class="option-content"><div class="option-text">Viudo/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="estado_relacional" value="Prefiero no responder">
+                            <div class="option-content"><div class="option-text">Prefiero no responder</div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Situación laboral actual</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Estudiante" required>
+                            <div class="option-content"><div class="option-text">Estudiante</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Empleado tiempo completo">
+                            <div class="option-content"><div class="option-text">Empleado/a tiempo completo</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Empleado tiempo parcial">
+                            <div class="option-content"><div class="option-text">Empleado/a tiempo parcial</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Autónomo">
+                            <div class="option-content"><div class="option-text">Autónomo/a / emprendedor/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Desempleado">
+                            <div class="option-content"><div class="option-text">Desempleado/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Jubilado">
+                            <div class="option-content"><div class="option-text">Jubilado/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Cuidador">
+                            <div class="option-content"><div class="option-text">Cuidador/a no remunerado/a</div></div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="situacion_laboral" value="Prefiero no responder">
+                            <div class="option-content"><div class="option-text">Prefiero no responder</div></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 10: Motivación -->
+            <div class="step" data-step="10">
+                <div class="step-header">
+                    <div class="step-icon">🎯</div>
+                    <h2 class="step-title">Tu motivación orbital</h2>
+                    <p class="step-description">¿Qué área de tu vida necesita más claridad ahora?</p>
+                    <p class="step-description">Selecciona hasta 2 opciones. Esto nos ayuda a priorizar en tu video personalizado.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Máximo 2 opciones:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Relaciones de pareja">
+                            <div class="option-content">
+                                <div class="option-text">💑 Relaciones de pareja / afectivas</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Vínculos familiares">
+                            <div class="option-content">
+                                <div class="option-text">👨‍👩‍👧 Vínculos familiares (padres, hermanos)</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Crianza">
+                            <div class="option-content">
+                                <div class="option-text">🧒 Crianza y relación con hijos/as</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Trayectoria profesional">
+                            <div class="option-content">
+                                <div class="option-text">💼 Trayectoria profesional / vocacional</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Patrones repetitivos">
+                            <div class="option-content">
+                                <div class="option-text">🔄 Patrones repetitivos que quiero comprender</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Sentido de vida">
+                            <div class="option-content">
+                                <div class="option-text">🌟 Sentido de vida y propósito</div>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="area_claridad" value="Autoconocimiento">
+                            <div class="option-content">
+                                <div class="option-text">🪞 Autoconocimiento profundo</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 11: Comentario final -->
+            <div class="step" data-step="11">
+                <div class="step-header">
+                    <div class="step-icon">✍️</div>
+                    <h2 class="step-title">¿Algo más que debamos saber?</h2>
+                    <p class="step-description">Si hay un contexto específico que no cubrimos, compártelo en 1–2 frases.</p>
+                    <p class="step-description">⚠️ <strong>No incluyas datos sensibles</strong> (nombres, diagnósticos clínicos, direcciones).</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Comentario opcional:</label>
+                    <textarea 
+                        name="comentario_final" 
+                        class="textarea-input" 
+                        placeholder="Ej: Recientemente cambié de ciudad y me siento desconectado de todo"
+                        maxlength="300"
+                        id="comentarioFinal"></textarea>
+                    <div class="char-counter">
+                        <span id="charCount">0</span> / 300 caracteres
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pantalla de éxito -->
+            <div class="step" data-step="12">
+                <div class="success-message">
+                    <div class="success-icon">✅</div>
+                    <h2 class="success-title">Tu análisis está completo</h2>
+                    <p class="success-text">Recibirás tu <strong>Análisis Orbital Personalizado</strong> en video en las próximas <strong>24–48 horas hábiles</strong>.</p>
+                    <p class="success-text">Revisa tu email (incluyendo spam) o el canal por donde nos contactaste.</p>
+                    <p class="success-text">🌌 <em>Gracias por confiar en CONSTELLia. Que este análisis ilumine patrones invisibles y abra nuevos caminos.</em></p>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="buttons">
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">← Anterior</button>
+                <button type="button" class="btn btn-primary" id="nextBtn">Comenzar →</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN - PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvAx1BLEKNBEPp3By6Fmcm52UXdp8ThhSe2CSL4Xl31f_4NjJudXFlzBftQ4SBMEin1w/exec';
+
+        let currentStep = 0;
+        const totalSteps = 12;
+        const steps = document.querySelectorAll('.step');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const form = document.getElementById('constelliaForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Contador de caracteres
+        const comentarioFinal = document.getElementById('comentarioFinal');
+        const charCount = document.getElementById('charCount');
+        if (comentarioFinal) {
+            comentarioFinal.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
+
+        // Efectos visuales en opciones
+        document.querySelectorAll('.radio-option').forEach(option => {
+            const radio = option.querySelector('input[type="radio"]');
+            radio.addEventListener('change', function() {
+                document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => {
+                    r.closest('.radio-option').classList.remove('selected');
+                });
+                if (this.checked) {
+                    option.classList.add('selected');
+                }
+            });
+        });
+
+        document.querySelectorAll('.checkbox-option').forEach(option => {
+            const checkbox = option.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        });
+
+        // Límite de 2 opciones en área_claridad
+        document.querySelectorAll('input[name="area_claridad"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checked = document.querySelectorAll('input[name="area_claridad"]:checked');
+                if (checked.length > 2) {
+                    this.checked = false;
+                    this.closest('.checkbox-option').classList.remove('selected');
+                    alert('Puedes seleccionar un máximo de 2 áreas');
+                }
+            });
+        });
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        function showStep(step) {
+            steps.forEach(s => s.classList.remove('active'));
+            steps[step].classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Actualizar botones
+            prevBtn.style.display = step === 0 ? 'none' : 'block';
+
+            if (step === totalSteps) {
+                nextBtn.style.display = 'none';
+            } else if (step === totalSteps - 1) {
+                nextBtn.textContent = 'Enviar análisis ✨';
+            } else {
+                nextBtn.textContent = 'Siguiente →';
+            }
+
+            updateProgress();
+        }
+
+        function validateStep(step) {
+            const currentStepElement = steps[step];
+            const requiredInputs = currentStepElement.querySelectorAll('[required]');
+
+            for (let input of requiredInputs) {
+                if (input.type === 'radio' || input.type === 'checkbox') {
+                    const name = input.name;
+                    const checked = currentStepElement.querySelector(`input[name="${name}"]:checked`);
+                    if (!checked) {
+                        return false;
+                    }
+                } else if (!input.value.trim()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        nextBtn.addEventListener('click', async function() {
+            errorMessage.style.display = 'none';
+
+            if (currentStep < totalSteps - 1) {
+                if (!validateStep(currentStep)) {
+                    errorMessage.textContent = 'Por favor completa todos los campos requeridos';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                currentStep++;
+                showStep(currentStep);
+            } else if (currentStep === totalSteps - 1) {
+                // Enviar formulario
+                if (!validateStep(currentStep)) {
+                    errorMessage.textContent = 'Por favor completa todos los campos requeridos';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                nextBtn.disabled = true;
+                nextBtn.textContent = 'Enviando... ⏳';
+
+                const formData = collectFormData();
+                const success = await submitForm(formData);
+
+                if (success) {
+                    currentStep++;
+                    showStep(currentStep);
+                } else {
+                    nextBtn.disabled = false;
+                    nextBtn.textContent = 'Enviar análisis ✨';
+                }
+            }
+        });
+
+        prevBtn.addEventListener('click', function() {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        function collectFormData() {
+            const data = {};
+
+            // Email
+            data.email = document.querySelector('input[name="email"]').value;
+
+            // Radio buttons
+            const radioFields = ['patron_dominante', 'intensidad', 'num_hermanos', 'posicion_hermanos', 
+                               'medios_hermanos', 'relacion_familia', 'red_apoyo', 'edad', 'genero', 
+                               'origen', 'estado_relacional', 'situacion_laboral'];
+
+            radioFields.forEach(field => {
+                const selected = document.querySelector(`input[name="${field}"]:checked`);
+                data[field] = selected ? selected.value : '';
+            });
+
+            // Checkboxes (multi-selección)
+            const checkboxFields = ['eventos_familiares', 'patrones_pareja', 'screening', 'area_claridad'];
+
+            checkboxFields.forEach(field => {
+                const checked = Array.from(document.querySelectorAll(`input[name="${field}"]:checked`))
+                    .map(cb => cb.value);
+                data[field] = checked.join(', ');
+            });
+
+            // Textarea
+            data.comentario_final = document.querySelector('textarea[name="comentario_final"]').value;
+
+            return data;
+        }
+
+        async function submitForm(data) {
+            if (SCRIPT_URL === 'PEGA_AQUI_TU_URL_DEL_SCRIPT') {
+                errorMessage.textContent = 'Error: No se ha configurado la URL del script de Google. Por favor contacta al administrador.';
+                errorMessage.style.display = 'block';
+                return false;
+            }
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Con mode: 'no-cors', no podemos leer la respuesta
+                // Asumimos éxito si no hay error de red
+                return true;
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Error al enviar el formulario. Por favor intenta de nuevo o contacta a soporte.';
+                errorMessage.style.display = 'block';
+                return false;
+            }
+        }
+
+        // Inicializar
+        showStep(currentStep);
+    </script>
+</body>
+</html>
